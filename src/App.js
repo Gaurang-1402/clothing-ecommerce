@@ -6,48 +6,56 @@ import SignInAndSignUpPage from "./pages/sign-in-and-sign-up/sign-in-and-sign-up
 import { Route, Switch } from "react-router-dom"
 import "./App.css"
 import Header from "./components/header/header.component"
-import { auth } from "./firebase/firebase.utils"
+import { auth, createUserProfileDocument } from "./firebase/firebase.utils"
 
-const HatsPage = () => (
-  <div>
-    <h1>SHOP PAGE</h1>
-  </div>
-)
+
+
 
 class App extends React.Component {
   constructor() {
     super()
 
-    this.state={
-      currentUser: null
+    this.state = {
+      currentUser: null,
     }
   }
 
   componentDidMount() {
+    this.unsubscribeFromAuth = auth.onAuthStateChanged(async (userAuth) => {
+      if (userAuth) {
+        const userRef = await createUserProfileDocument(userAuth)
 
-    this.unsubscribeFromAuth = auth.onAuthStateChanged(user => {
-      this.setState({currentUser: user})
+        userRef.onSnapshot((snapShot) => {
+          this.setState({
+            currentUser: {
+              id: snapShot.id,
+              ...snapShot.data(),
+            },
+          })
 
-      console.log(user);
+          console.log(this.state);
+        })
+      }
+
+      this.setState({ currentUser: userAuth })
     })
-
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     this.unsubscribeFromAuth()
   }
 
   render() {
-  return (
-    <div>
-      <Header currentUser={this.state.currentUser}/>
-      <Switch>
-        <Route component={HomePage} exact path='/'></Route>
-        <Route component={ShopPage} exact path='/shop'></Route>
-        <Route component={SignInAndSignUpPage} exact path='/signin'></Route>
-      </Switch>
-    </div>
-  )
+    return (
+      <div>
+        <Header currentUser={this.state.currentUser} />
+        <Switch>
+          <Route component={HomePage} exact path='/'></Route>
+          <Route component={ShopPage} exact path='/shop'></Route>
+          <Route component={SignInAndSignUpPage} exact path='/signin'></Route>
+        </Switch>
+      </div>
+    )
   }
 }
 
