@@ -6,6 +6,7 @@ import SignInAndSignUpPage from "./pages/sign-in-and-sign-up/sign-in-and-sign-up
 import { Route, Switch } from "react-router-dom"
 import "./App.css"
 import Header from "./components/header/header.component"
+import { auth } from "./firebase/firebase.utils"
 
 const HatsPage = () => (
   <div>
@@ -13,18 +14,41 @@ const HatsPage = () => (
   </div>
 )
 
-function App() {
+class App extends React.Component {
+  constructor() {
+    super()
+
+    this.state={
+      currentUser: null
+    }
+  }
+
+  componentDidMount() {
+
+    this.unsubscribeFromAuth = auth.onAuthStateChanged(user => {
+      this.setState({currentUser: user})
+
+      console.log(user);
+    })
+
+  }
+
+  componentWillUnmount () {
+    this.unsubscribeFromAuth()
+  }
+
+  render() {
   return (
     <div>
-      <Header />{" "}
+      <Header currentUser={this.state.currentUser}/>
       <Switch>
         <Route component={HomePage} exact path='/'></Route>
         <Route component={ShopPage} exact path='/shop'></Route>
         <Route component={SignInAndSignUpPage} exact path='/signin'></Route>
-
       </Switch>
     </div>
   )
+  }
 }
 
 export default App
